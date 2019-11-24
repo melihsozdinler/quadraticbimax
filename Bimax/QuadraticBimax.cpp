@@ -11,7 +11,7 @@ using namespace std;
 
 #define LINUX
 
-#define DEBUG 0
+#define DEBUG 1
 
 typedef unsigned long int  bitvector_t;
 typedef bitvector_t        *cs_t;
@@ -39,6 +39,9 @@ cs_t   columnIntersection;
 std::vector<std::vector<int> > store;
 int maxedged = 0;
 int maxnotfound = 0;
+
+char saveResult[1024];
+
 
 // definitions
 struct Coord {
@@ -269,7 +272,7 @@ void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
 		if (maxedged < count * (lastRow - firstRow + 1)) {
 			cout << " Found " << lastRow - firstRow + 1 << " x " << count << endl;
 			maxedged = count * (lastRow - firstRow + 1);
-			fopen_s(&fptr, "BIMAXResult.txt", "w");
+			fopen_s(&fptr, saveResult, "w");
 			//cout << "K:" << lastRow - firstRow + 1 << " - " << "L:" << count << endl;
 			fprintf(fptr, "%d\t%d\n", lastRow - firstRow + 1, count);
 			for (i = firstRow; i <= lastRow; i++) {
@@ -288,7 +291,7 @@ void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
 
 
 			// Remove following block not to show bicluster
-			//#ifndef DEBUG
+			#ifndef DEBUG
 			long  j;
 			for (i = firstRow; i <= lastRow; i++)
 			{
@@ -299,7 +302,7 @@ void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
 				}
 				cout << endl;
 			}
-			//#endif
+			#endif
 		}
 
 		// rows[i].columnSet
@@ -523,7 +526,28 @@ int main(int argc, char *argv[])
 	biclusterCount = 10000000;
 	FILE  *fp;
 	FILE *fptr, *fptr2;
-	fopen_s(&fptr, "BIMAXResult.txt", "w");
+
+
+	int counter;
+	printf("Program Name Is: %s", argv[0]);
+	if (argc == 1)
+		printf("\nNo Extra Command Line Argument Passed Other Than Program Name");
+	if (argc >= 2)
+	{
+		printf("\nNumber Of Arguments Passed: %d", argc);
+		printf("\n----Following Are The Command Line Arguments Passed----");
+		for (counter = 0; counter<argc; counter++)
+			printf("\nargv[%d]: %s", counter, argv[counter]);
+	}
+
+
+	if (argc > 2)
+		strcpy_s(saveResult, 1024, argv[2]);
+	else
+		strcpy_s(saveResult, 1024, "BIMAXResult.txt");
+
+	fopen_s(&fptr, saveResult, "w");
+
 
 	cout << "/**************************************************/" << endl;
 	cout << "	       BIMAX'S RUN " << endl;
@@ -551,7 +575,7 @@ int main(int argc, char *argv[])
 		int rc;
 		rc = quadsearch(1, 1, noRows, noColumns);
 
-		if (fopen_s(&fptr2, "BIMAXResult.txt", "r"))
+		if (argv[2] == NULL ? fopen_s(&fptr2, saveResult, "r") : fopen_s(&fptr2, argv[2], "r"))
 		{
 			char strToRead[16] = "";
 			long maxCase = 0;
@@ -590,7 +614,7 @@ int main(int argc, char *argv[])
 		}
 
 
-		fopen_s(&fptr2, "statusBimax.txt", "w");
+		argv[3] == NULL ? fopen_s(&fptr2, "statusBimax.txt", "w") : fopen_s(&fptr2, argv[3], "w");
 
 		fprintf_s(fptr2, "%d\t%d\t%d\t%d\t%lf\t%lf", numberOfBiclusters, maxDim1, maxDim2);
 		fclose(fptr2);
