@@ -1,27 +1,27 @@
-#include "stdafx.h"
-#include<limits.h>
-#include<stdio.h>
-#include<list>
+#include <climits>
+#include <cstdio>
+#include <list>
 #include <iostream>
-#include<stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
 #include <vector>
+#include <string>
+#include <fstream>
+#include <memory>
 
 using namespace std;
-
-#define LINUX
 
 #define DEBUG 1
 
 typedef unsigned long int  bitvector_t;
-typedef bitvector_t        *cs_t;
+typedef bitvector_t*      cs_t;
 
 typedef enum { identity_b, complement_b }  cmode_t;
 
-typedef struct row_s {
+struct row_t {
 	long  originalRowNumber;
 	cs_t  columnSet;
-} row_t;
+};
 
 int          bitsPerBV;
 int          noBVs;
@@ -36,7 +36,7 @@ row_t  *rows;
 cs_t   *consideredColumns;
 cs_t   *mandatoryColumns;
 cs_t   columnIntersection;
-std::vector<std::vector<int> > store;
+vector<vector<int> > store;
 int maxedged = 0;
 int maxnotfound = 0;
 
@@ -236,13 +236,12 @@ long  selectRows(long  firstRow, long  lastRow, long  level, int  *overlapping)
 	return selected;
 } /* selectRows */
 
-void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
+void writeBicluster(long firstRow, long lastRow, cs_t columnSet)
 {
-	long  biclusterCounter = 0;
-	long  i;
-	FILE *fptr;
+	long i;
+	ofstream fptr;
 	bool flag = false;
-	long  j;
+	long j;
 	/* to check bicluster content */
 	for (i = firstRow; i <= lastRow; i++)
 	{
@@ -260,10 +259,6 @@ void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
 	flag = false;
 
 	if (flag == false) {
-
-		biclusterCounter++;
-		//cout << "Bicluster " << biclusterCount << " is calculated for BIMAX\n";
-		//   printf("\n%ld\n", biclusterCounter);
 		int count = 0;
 		for (i = 0; i < noColumns; i++)
 			if (isSet(columnSet, i))
@@ -272,27 +267,21 @@ void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
 		if (maxedged < count * (lastRow - firstRow + 1)) {
 			cout << " Found " << lastRow - firstRow + 1 << " x " << count << endl;
 			maxedged = count * (lastRow - firstRow + 1);
-			fopen_s(&fptr, saveResult, "w");
-			//cout << "K:" << lastRow - firstRow + 1 << " - " << "L:" << count << endl;
-			fprintf(fptr, "%d\t%d\n", lastRow - firstRow + 1, count);
+			fptr.open(saveResult);
+			fptr << lastRow - firstRow + 1 << "\t" << count << endl;
 			for (i = firstRow; i <= lastRow; i++) {
-				fprintf(fptr, "%d\t", rows[i].originalRowNumber + 1L);
-				//     printf("%ld\t", rows[i].originalRowNumber + 1L);
+				fptr << rows[i].originalRowNumber + 1L << "\t";
 			}
-			//   printf("\n");
-			fprintf(fptr, "\n");
+			fptr << endl;
 			for (i = 0; i < noColumns; i++)
 				if (isSet(columnSet, i)) {
-					//       printf("%ld\t", i + 1L);
-					fprintf(fptr, "%d\t", i);
+					fptr << i << "\t";
 				}
-			fprintf(fptr, "\n");
-			fclose(fptr);
+			fptr << endl;
+			fptr.close();
 
-
-			// Remove following block not to show bicluster
 			#ifndef DEBUG
-			long  j;
+			long j;
 			for (i = firstRow; i <= lastRow; i++)
 			{
 				cout << i << ":";
@@ -304,9 +293,6 @@ void  writeBicluster(long  firstRow, long  lastRow, cs_t  columnSet)
 			}
 			#endif
 		}
-
-		// rows[i].columnSet
-
 
 		biclusterCount--;
 	}
@@ -408,27 +394,24 @@ int  initialize()
 	return !failed;
 } /* initializeMemory */
 
-void  readInDataMatrix(FILE  *fp)
+void readInDataMatrix(ifstream& fp)
 {
 	long  i, j, cell;
-	// 	cout << endl;
 	for (i = 0L; i < noRows; i++) {
-		std::vector<int> tmp_vStoreRow;
+		vector<int> tmp_vStoreRow;
 		for (j = 0L; j < noColumns; j++) {
-			fscanf_s(fp, "%d", &cell);
+			fp >> cell;
 			tmp_vStoreRow.push_back(cell);
 #ifndef DEBUG
 			if (cell != 0)
 				cout << i << " - " << j << endl;
 #endif
-			// 	cout << cell << "\t";
 			if (cell == 0)
 				unsetColumn(rows[i].columnSet, j);
 			else
 				setColumn(rows[i].columnSet, j);
 		}
 		store.push_back(tmp_vStoreRow);
-		// 	cout << endl;
 	}
 } /* readInDataMatrix */
 
@@ -524,47 +507,46 @@ int main(int argc, char *argv[])
 	long int timeAfter = 0;
 
 	biclusterCount = 10000000;
-	FILE  *fp;
-	FILE *fptr, *fptr2;
-
+	ifstream fp;
+	ofstream fptr, fptr2;
 
 	int counter;
-	printf("Program Name Is: %s", argv[0]);
+	cout << "Program Name Is: " << argv[0] << endl;
 	if (argc == 1)
-		printf("\nNo Extra Command Line Argument Passed Other Than Program Name");
+		cout << "\nNo Extra Command Line Argument Passed Other Than Program Name" << endl;
 	if (argc >= 2)
 	{
-		printf("\nNumber Of Arguments Passed: %d", argc);
-		printf("\n----Following Are The Command Line Arguments Passed----");
+		cout << "\nNumber Of Arguments Passed: " << argc << endl;
+		cout << "\n----Following Are The Command Line Arguments Passed----" << endl;
 		for (counter = 0; counter<argc; counter++)
-			printf("\nargv[%d]: %s", counter, argv[counter]);
+			cout << "argv[" << counter << "]: " << argv[counter] << endl;
 	}
 
-
+	string saveResult;
 	if (argc > 2)
-		strcpy_s(saveResult, 1024, argv[2]);
+		saveResult = argv[2];
 	else
-		strcpy_s(saveResult, 1024, "BIMAXResult.txt");
+		saveResult = "BIMAXResult.txt";
 
-	fopen_s(&fptr, saveResult, "w");
-
+	fptr.open(saveResult);
 
 	cout << "/**************************************************/" << endl;
-	cout << "	       BIMAX'S RUN " << endl;
+	cout << "           BIMAX'S RUN " << endl;
 	cout << "/**************************************************/" << endl;
-	fclose(fptr);
-	if (argv[1] != NULL)
-		fopen_s(&fp, argv[1], "r");
-	else
-		fopen_s(&fp, "example.txt", "r");
+	fptr.close();
 
-	if (fp == NULL)  exit(0);
-	fscanf_s(fp, "%ld", &noRows);
-	fscanf_s(fp, "%ld", &noColumns);
-	fscanf_s(fp, "%ld", &minNoRows);
-	fscanf_s(fp, "%ld", &minNoColumns);
+	if (argv[1] != nullptr)
+		fp.open(argv[1]);
+	else
+		fp.open("example.txt");
+
+	if (!fp) exit(0);
+	fp >> noRows;
+	fp >> noColumns;
+	fp >> minNoRows;
+	fp >> minNoColumns;
 	maxnotfound = noRows * noColumns;
-	//   cout << noRows << " - " << noColumns << " - " << minNoRows << " - " << minNoColumns << endl;
+
 	if (minNoRows < 1L)
 		minNoRows = 1L;
 	if (minNoColumns < 1L)
@@ -575,25 +557,29 @@ int main(int argc, char *argv[])
 		int rc;
 		rc = quadsearch(1, 1, noRows, noColumns);
 
-		if (argv[2] == NULL ? fopen_s(&fptr2, saveResult, "r") : fopen_s(&fptr2, argv[2], "r"))
+		ifstream fptr2;
+		if (argv[2] == nullptr)
+			fptr2.open(saveResult);
+		else
+			fptr2.open(argv[2]);
+
+		if (fptr2)
 		{
-			char strToRead[16] = "";
+			string strToRead;
 			long maxCase = 0;
 			int dim1 = 0, dim2 = 0;
 			cout << "Check File until the end" << endl;
 
-			while (!feof(fptr2))
+			while (fptr2 >> dim1 >> dim2)
 			{
-				fscanf_s(fptr2, "%d%d", &dim1, &dim2);
-				//cout << dim1 << " - " << dim2 << endl;
 				for (int count = 0; count < dim1; count++)
 				{
-					fscanf_s(fptr2, "%s", strToRead);
+					fptr2 >> strToRead;
 				}
 
 				for (int count = 0; count < dim2; count++)
 				{
-					fscanf_s(fptr2, "%s", strToRead);
+					fptr2 >> strToRead;
 				}
 
 				if (dim1 * dim2 > maxCase)
@@ -603,22 +589,20 @@ int main(int argc, char *argv[])
 					maxCase = dim1 * dim2;
 				}
 				numberOfBiclusters++;
-
 			}
 			numberOfBiclusters--;
-			fclose(fptr2);
+			fptr2.close();
 		}
 		else
 		{
 			cout << "File Could not Be opened" << endl;
 		}
 
-
-		argv[3] == NULL ? fopen_s(&fptr2, "statusBimax.txt", "w") : fopen_s(&fptr2, argv[3], "w");
-
-		fprintf_s(fptr2, "%d\t%d\t%d\t%d\t%lf\t%lf", numberOfBiclusters, maxDim1, maxDim2);
-		fclose(fptr2);
-
+		string statusFile = (argv[3] == nullptr) ? "statusBimax.txt" : argv[3];
+		ofstream statusOut;  // Changed to ofstream for writing
+		statusOut.open(statusFile);
+		statusOut << numberOfBiclusters << "\t" << maxDim1 << "\t" << maxDim2;
+		statusOut.close();
 	}
 
 	return 0;
