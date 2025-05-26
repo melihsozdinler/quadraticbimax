@@ -40,7 +40,7 @@ vector<vector<int> > store;
 int maxedged = 0;
 int maxnotfound = 0;
 
-char saveResult[1024];
+string saveResult;
 
 
 // definitions
@@ -267,7 +267,14 @@ void writeBicluster(long firstRow, long lastRow, cs_t columnSet)
 		if (maxedged < count * (lastRow - firstRow + 1)) {
 			cout << " Found " << lastRow - firstRow + 1 << " x " << count << endl;
 			maxedged = count * (lastRow - firstRow + 1);
-			fptr.open(saveResult);
+			
+			// Open file in truncate mode to overwrite previous content
+			fptr.open(saveResult, ios::trunc);
+			if (!fptr) {
+				cerr << "Error: Could not open file " << saveResult << " for writing" << endl;
+				return;
+			}
+			
 			fptr << lastRow - firstRow + 1 << "\t" << count << endl;
 			for (i = firstRow; i <= lastRow; i++) {
 				fptr << rows[i].originalRowNumber + 1L << "\t";
@@ -278,6 +285,10 @@ void writeBicluster(long firstRow, long lastRow, cs_t columnSet)
 					fptr << i << "\t";
 				}
 			fptr << endl;
+			
+			if (fptr.fail()) {
+				cerr << "Error: Failed to write to file " << saveResult << endl;
+			}
 			fptr.close();
 
 			#ifndef DEBUG
@@ -522,7 +533,6 @@ int main(int argc, char *argv[])
 			cout << "argv[" << counter << "]: " << argv[counter] << endl;
 	}
 
-	string saveResult;
 	if (argc > 2)
 		saveResult = argv[2];
 	else
